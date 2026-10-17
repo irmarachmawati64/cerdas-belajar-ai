@@ -18,10 +18,11 @@ main{max-width:720px;margin:0 auto;padding:20px 16px 60px}
 .bar i{display:block;height:100%;width:0;background:var(--teal);transition:width .3s}
 .step{display:none}.step.on{display:block}
 h2{font-size:1.4rem;margin:0 0 6px}
+h3{font-size:1.1rem;margin:18px 0 6px}
 .box{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:16px}
 label{display:block;font-weight:600;margin:10px 0 4px}
-input[type=text],select{width:100%;padding:11px;font:inherit;border:2px solid var(--line);border-radius:10px;background:#fff}
-input:focus,select:focus,button:focus-visible,.opt:focus-within{outline:3px solid var(--sun);outline-offset:2px}
+select{width:100%;padding:11px;font:inherit;border:2px solid var(--line);border-radius:10px;background:#fff}
+select:focus,button:focus-visible,.opt:focus-within{outline:3px solid var(--sun);outline-offset:2px}
 .q{font-weight:800;margin-bottom:10px}
 .opt{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border:2px solid var(--line);border-radius:10px;margin-bottom:8px;cursor:pointer;font-weight:400}
 .opt input{margin-top:6px}
@@ -41,6 +42,14 @@ button.alt{background:#fff;color:var(--ink);border:2px solid var(--line)}
 .kirim.gagal{background:#fdecee;color:var(--bad)}
 .rev{border-left:5px solid var(--line);padding:6px 12px;margin:8px 0}
 .rev.ok{border-color:var(--ok)}.rev.no{border-color:var(--bad)}
+.act{border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:10px 0;background:#fafcfe}
+.act b{display:block;margin-bottom:2px}
+.act ol,.act ul{margin:6px 0 0;padding-left:20px}
+.flow{display:flex;flex-direction:column;align-items:center;gap:0;margin:10px 0}
+.flow div{padding:6px 14px;border:2px solid var(--teal);border-radius:10px;background:#e8f5f5;font-weight:600;font-size:.9rem;text-align:center}
+.flow div.mulai{border-radius:20px;background:var(--teal);color:#fff}
+.flow div.cek{border-color:var(--sun);background:#fff6e0;transform:none}
+.flow span{font-size:1.1rem;line-height:1.1;color:var(--teal)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -110,8 +119,8 @@ button.alt{background:#fff;color:var(--ink);border:2px solid var(--line)}
 </main>
 
 <script>
-// Tempel alamat Web App Google Apps Script di sini (lihat petunjuk pemasangan)
-const SCRIPT_URL="https://script.google.com/macros/s/AKfycbzNIoyHhF6ydRUQj3WlO1j_2gafJ_ftzNDCuO56Rdt_3Fie3YC2Xu7R2_elVIS3Rwe53w/exec";
+// Alamat Web App Google Apps Script. Ganti dengan URL /exec dari deployment terbaru.
+const SCRIPT_URL="https://script.google.com/macros/s/AKfycbx3dwPVMRUJfDL2ba8T7Jtn1OrojAhGfh-dx9pkIb9a7Gj-mYmjughBTPA1wq5_ifeNaw/exec";
 
 const KOG=[
  {q:"Urutan langkah yang tersusun logis untuk menyelesaikan suatu masalah disebut ...",o:["Algoritma","Aplikasi","Antarmuka","Arsip"],a:0,p:"Algoritma adalah langkah-langkah terurut untuk menyelesaikan masalah."},
@@ -139,10 +148,33 @@ const VAK=[
  {q:"Kalau bingung memakai aplikasi baru, aku ...",o:[["v","melihat gambar petunjuk atau video tutorial"],["a","bertanya kepada orang lain"],["k","mencoba-coba sendiri"]]},
  {q:"Bahan belajar yang paling kusukai berupa ...",o:[["v","infografis dan video"],["a","rekaman audio penjelasan"],["k","lembar kerja praktik"]]}
 ];
+
+const FLOW=`<div class="flow" aria-label="Diagram alur membuat teh">
+<div class="mulai">Mulai</div><span>&#8595;</span>
+<div>Rebus air</div><span>&#8595;</span>
+<div class="cek">Air sudah mendidih?</div><span>&#8595; ya (kalau belum, kembali merebus)</span>
+<div>Tuang air ke gelas berisi teh</div><span>&#8595;</span>
+<div>Aduk dan tunggu 3 menit</div><span>&#8595;</span>
+<div class="mulai">Selesai</div></div>`;
+
 const GAYA={
- Visual:{d:"Kamu paling mudah paham lewat gambar, diagram, warna, dan video.",m:["Lihat infografis dan diagram alur (flowchart) tentang algoritma.","Tonton video pendek tentang cara kerja komputer dan internet.","Buat peta konsep tentang perangkat keras, perangkat lunak, dan jaringan."]},
- Auditori:{d:"Kamu paling mudah paham lewat mendengar penjelasan dan berdiskusi.",m:["Dengarkan penjelasan audio tentang berpikir komputasional.","Diskusikan dengan teman: bagaimana data menjadi informasi?","Jelaskan ulang materi dengan kata-katamu sendiri."]},
- Kinestetik:{d:"Kamu paling mudah paham lewat praktik langsung dan mencoba sendiri.",m:["Susun algoritma sederhana, misalnya langkah membuat teh, lalu uji ke temanmu.","Praktik langsung memakai rumus spreadsheet untuk data nilai.","Kenali dan bandingkan perangkat keras dan perangkat lunak di komputer sekolah."]}
+ Visual:{d:"Kamu paling mudah paham lewat gambar, diagram, warna, dan video.",m:[
+  {j:"Baca diagram alur (flowchart)",t:"Pelajari diagram berikut, lalu coba tambahkan langkah memberi gula dengan menggambarnya di bukumu.",h:FLOW},
+  {j:"Peta konsep perangkat komputer",t:"Gambar peta konsep dengan \"Komputer\" di tengah. Cabangkan menjadi perangkat masukan, proses, keluaran, dan penyimpanan. Beri warna berbeda dan tulis tiga contoh di tiap cabang."},
+  {j:"Infografis data menjadi informasi",t:"Buat satu poster kecil tentang alur: data mentah, diolah, menjadi informasi. Pakai contoh nyata, misalnya daftar nilai kelas yang diolah menjadi rata-rata."}]},
+ Auditori:{d:"Kamu paling mudah paham lewat mendengar penjelasan dan berdiskusi.",m:[
+  {j:"Jelaskan algoritma dengan suara",t:"Rekam suaramu di ponsel menjelaskan langkah membuat mi instan secara berurutan. Putar ulang dan periksa: apakah ada langkah yang terlewat atau tertukar?"},
+  {j:"Diskusi berpasangan: data dan informasi",t:"Bersama temanmu, bergantian menjawab: apa bedanya data dan informasi? Berikan dua contoh dari kehidupan sehari-hari, lalu saling menilai jawaban."},
+  {j:"Ceritakan ulang dengan kata-katamu",t:"Setelah belajar satu topik, jelaskan ke teman atau keluarga selama dua menit tanpa melihat catatan. Bagian yang sulit kamu jelaskan adalah bagian yang perlu dipelajari lagi."}]},
+ Kinestetik:{d:"Kamu paling mudah paham lewat praktik langsung dan mencoba sendiri.",m:[
+  {j:"Uji algoritma ke temanmu",t:"Tulis langkah membuat teh manis dalam 6 sampai 8 langkah. Minta temanmu melakukannya persis sesuai tulisanmu, tanpa menebak. Catat langkah yang membuatnya bingung, lalu perbaiki (ini disebut debugging)."},
+  {j:"Praktik spreadsheet",t:"Buka aplikasi spreadsheet. Isi 5 nilai di A1 sampai A5, lalu hitung dengan =SUM(A1:A5) dan =AVERAGE(A1:A5). Coba ubah satu nilai dan amati hasilnya berubah sendiri."},
+  {j:"Kenali perangkat di komputer sekolah",t:"Bersama temanmu, tunjuk dan catat perangkat masukan, keluaran, dan penyimpanan yang ada di komputer sekolah. Lalu tulis tiga perangkat lunak yang terpasang dan fungsinya."}]}
+};
+const LEVEL={
+ Dasar:{t:"Mulai dari dasar",m:["Pelajari satu istilah per hari: algoritma, data, informasi, perangkat keras, perangkat lunak. Tulis artinya dan satu contoh dari sekitarmu.","Latihan: urutkan 5 langkah menyalakan komputer dan membuka sebuah aplikasi dengan benar.","Kalau ada yang belum paham, catat dan tanyakan kepada gurumu."]},
+ Berkembang:{t:"Perkuat pemahaman",m:["Pilih satu kegiatan sehari-hari, lalu pecah menjadi langkah-langkah kecil (dekomposisi) dan cari bagian yang berulang (pengenalan pola).","Buat tabel di spreadsheet berisi nama dan nilai 5 temanmu, lalu hitung jumlah, rata-rata, nilai tertinggi, dan terendah.","Buat daftar lima ciri kata sandi yang kuat, lalu periksa kata sandimu sendiri tanpa menuliskannya."]},
+ Mahir:{t:"Tantangan lanjutan",m:["Rancang algoritma dengan percabangan (jika ... maka ...) untuk masalah nyata, misalnya memilih jalur ke sekolah saat hujan, lalu gambarkan dalam flowchart.","Buat proyek mini: spreadsheet pencatat pengeluaran dengan rumus otomatis dan satu grafik.","Buat panduan satu halaman tentang etika memakai gambar dan informasi dari internet (sumber, izin, hak cipta) untuk teman sekelasmu."]}
 };
 const NAMA_V={v:"Visual",a:"Auditori",k:"Kinestetik"};
 const ST={kog:{},non:{},vak:{}};let data=null;
@@ -185,7 +217,7 @@ async function isiNama(){
  try{
   const j=await api("aksi=nama&kelas="+encodeURIComponent(k));
   if($e("kelas").value!==k)return;
-  sel.innerHTML='<option value="">Pilih namamu</option>'+(j.siswa||[]).map(s=>`<option value="${s.id}">${esc(s.nama)}</option>`).join("");
+  sel.innerHTML='<option value="">Pilih namamu</option>'+(j.siswa||[]).map(s=>`<option value="${esc(s.id)}">${esc(s.nama)}</option>`).join("");
   sel.disabled=false;
  }catch(x){
   sel.innerHTML='<option value="">Gagal memuat</option>';
@@ -210,6 +242,9 @@ function cekKog(){if(kumpul("k",KOG.length,1,"e1",(i,v)=>ST.kog[i]=+v))go(2)}
 function cekNon(){if(kumpul("n",NON.length,9,"e2",(i,v)=>ST.non[i]=+v))go(3)}
 function cekVak(){if(kumpul("g",VAK.length,13,"e3",(i,v)=>ST.vak[i]=v))hasil()}
 
+function aktivitas(a){
+ return `<div class="act"><b>${esc(a.j)}</b>${esc(a.t)}${a.h||""}</div>`;
+}
 function hasil(){
  const skor=KOG.filter((s,i)=>ST.kog[i]===s.a).length;
  const lvl=skor<=3?"Dasar":skor<=6?"Berkembang":"Mahir";
@@ -234,8 +269,11 @@ function hasil(){
  document.getElementById("saran").textContent=saran+(siap==="Perlu pendampingan"?" Jangan ragu meminta bantuan guru saat belajar.":"");
  document.getElementById("bahas").innerHTML=KOG.map((s,i)=>{const ok=ST.kog[i]===s.a;
   return `<div class="rev ${ok?'ok':'no'}"><b>${i+1}. ${ok?'Benar':'Belum tepat'}</b><br>${s.p}</div>`}).join("");
- document.getElementById("materi").innerHTML=dom.map(g=>`<p><b>${g}</b></p><ol>`+GAYA[g].m.map(m=>`<li>${m}</li>`).join("")+`</ol>`).join("")+
-  `<p><i>Ganti isi ini dengan materi dan tautan milikmu sendiri.</i></p>`;
+ const L=LEVEL[lvl];
+ document.getElementById("materi").innerHTML=
+  `<h3>Sesuai gaya belajarmu</h3>`+
+  dom.map(g=>(dom.length>1?`<p><b>${g}</b></p>`:"")+GAYA[g].m.map(aktivitas).join("")).join("")+
+  `<h3>${esc(L.t)} (level ${esc(lvl)})</h3><ul>`+L.m.map(m=>`<li>${esc(m)}</li>`).join("")+`</ul>`;
  go(4);kirim();
 }
 function kirim(){
