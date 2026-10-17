@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dashboard Guru - Cerdas Belajar AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#1f2a44;--paper:#f6f8fb;--teal:#0f8b8d;--sun:#f6b73c;--line:#d9e0ea;--bad:#d1495b;--v:#0f8b8d;--a:#f6b73c;--k:#d1495b}
+*{box-sizing:border-box}
+body{margin:0;font-family:Nunito,system-ui,sans-serif;background:var(--paper);color:var(--ink);line-height:1.5}
+header{background:var(--ink);color:#fff;padding:16px 20px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+header h1{margin:0;font-size:1.3rem}
+main{max-width:1000px;margin:0 auto;padding:18px 16px 60px}
+.box{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:16px}
+input,select,button{font:inherit;padding:9px 12px;border-radius:10px;border:2px solid var(--line);background:#fff}
+button{font-weight:800;border:0;background:var(--teal);color:#fff;cursor:pointer}
+button.alt{background:#fff;color:var(--ink);border:2px solid var(--line)}
+input:focus,select:focus,button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
+.grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+.stat b{display:block;font-size:2rem;line-height:1.1}
+.row{display:flex;align-items:center;gap:8px;margin:6px 0}
+.row span.n{width:90px;font-weight:600}
+.row .t{flex:1;background:var(--line);border-radius:6px;height:16px;overflow:hidden}
+.row .t i{display:block;height:100%}
+.tools{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:640px}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line)}
+th{background:#eef2f7;font-size:.9rem}
+.pill{display:inline-block;padding:2px 10px;border-radius:20px;font-weight:600;font-size:.85rem;background:#eef2f7}
+.pill.Visual{background:#d8f0f0}.pill.Auditori{background:#fdeec8}.pill.Kinestetik{background:#fbdde1}
+.msg{color:var(--bad);font-weight:600}
+#gate{max-width:380px;margin:60px auto}
+small{color:#5b6680}
+</style>
+</head>
+<body>
+<header>
+  <h1>Dashboard Guru: Cerdas Belajar AI</h1>
+  <span id="update"></span>
+</header>
+<main>
+  <div id="gate" class="box">
+    <h2 style="margin-top:0">Masuk guru</h2>
+    <label for="pin">PIN guru</label><br>
+    <input type="password" id="pin" style="width:100%;margin:6px 0 10px">
+    <button onclick="masuk()" style="width:100%">Buka dashboard</button>
+    <p class="msg" id="gerr"></p>
+  </div>
+
+  <div id="dash" style="display:none">
+    <div class="grid">
+      <div class="box stat"><small>Siswa sudah mengerjakan</small><b id="jml">0</b></div>
+      <div class="box stat"><small>Rata-rata nilai</small><b id="rata">0</b></div>
+      <div class="box stat"><small>Perlu pendampingan</small><b id="damp">0</b></div>
+      <div class="box stat"><small>Belum mengerjakan</small><b id="belum">0</b></div>
+    </div>
+    <details class="box"><summary><b>Siapa yang belum mengerjakan</b></summary><div id="belumList" style="margin-top:8px"></div></details>
+    <div class="grid">
+      <div class="box"><b>Gaya belajar</b><div id="gayaBar"></div></div>
+      <div class="box"><b>Level pengetahuan awal</b><div id="lvlBar"></div></div>
+    </div>
+    <div class="box">
+      <div class="tools">
+        <input type="text" id="cari" placeholder="Cari nama siswa" oninput="tampil()" aria-label="Cari nama siswa">
+        <select id="fKelas" onchange="tampil()" aria-label="Filter kelas"><option value="">Semua kelas</option></select>
+        <select id="fGaya" onchange="tampil()" aria-label="Filter gaya belajar"><option value="">Semua gaya</option><option>Visual</option><option>Auditori</option><option>Kinestetik</option></select>
+        <button onclick="muat()">Muat ulang</button>
+        <button class="alt" onclick="csv()">Unduh CSV</button>
+      </div>
+      <div class="wrap">
+        <table>
+          <thead><tr><th>Nama</th><th>Kelas</th><th>Nilai</th><th>Level</th><th>Kesiapan</th><th>Gaya belajar</th><th>Waktu</th></tr></thead>
+          <tbody id="isi"></tbody>
+        </table>
+      </div>
+      <p id="kosong" class="msg"></p>
+      <small>Halaman ini memuat ulang data sendiri tiap 30 detik. Jika siswa mengerjakan berulang, yang ditampilkan hanya hasil terbarunya.</small>
+    </div>
+  </div>
+</main>
+
+<script>
+// Tempel alamat Web App Google Apps Script yang sama dengan di index.html
+const SCRIPT_URL="https://script.google.com/macros/s/AKfycbzNIoyHhF6ydRUQj3WlO1j_2gafJ_ftzNDCuO56Rdt_3Fie3YC2Xu7R2_elVIS3Rwe53w/exec";
+
+let semua=[],pin="",timer=null;
+const $=id=>document.getElementById(id);
+
+function masuk(){
+ pin=$("pin").value.trim();
+ if(!pin){$("gerr").textContent="Isi PIN dulu.";return}
+ if(SCRIPT_URL.indexOf("GANTI")===0){$("gerr").textContent="Alamat Apps Script belum dipasang di file guru.html.";return}
+ muat(true);
+}
+async function muat(awal){
+ try{
+  const r=await fetch(SCRIPT_URL+"?pin="+encodeURIComponent(pin));
+  const j=await r.json();
+  if(j.error){if(awal){$("gerr").textContent="PIN salah.";}else{alert("PIN salah.")}return}
+  // ambil hasil terbaru untuk tiap siswa (nama + kelas)
+  const peta={};
+  j.data.forEach(d=>{const k=d.nisn?norm(d.nisn):String(d.nama).toLowerCase().trim()+"|"+d.kelas;
+   if(!peta[k]||new Date(d.waktu)>new Date(peta[k].waktu))peta[k]=d});
+  semua=Object.values(peta).sort((a,b)=>String(a.nama).localeCompare(String(b.nama)));
+  ROSTER=j.siswa||[];isiKelas();
+  $("gate").style.display="none";$("dash").style.display="block";
+  $("update").textContent="Diperbarui "+new Date().toLocaleTimeString("id-ID");
+  tampil();
+  if(!timer)timer=setInterval(()=>muat(false),30000);
+ }catch(e){
+  if(awal)$("gerr").textContent="Gagal memuat data. Periksa internet dan alamat Apps Script.";
+  else $("update").textContent="Gagal memperbarui, mencoba lagi ...";
+ }
+}
+let ROSTER=[],KELAS=[];
+function norm(n){return String(n||"").replace(/\D/g,"").replace(/^0+/,"")}
+function isiKelas(){
+ const f=$("fKelas"),sekarang=f.value;
+ KELAS=[...new Set(ROSTER.map(s=>s.kelas))];
+ f.innerHTML='<option value="">Semua kelas</option>'+KELAS.map(k=>`<option>${esc(k)}</option>`).join("");
+ f.value=KELAS.includes(sekarang)?sekarang:"";
+}
+function belumList(){
+ const fk=$("fKelas").value,ada=new Set(semua.map(d=>norm(d.nisn))),per={};
+ ROSTER.filter(s=>(!fk||s.kelas===fk)&&!ada.has(norm(s.nisn))).forEach(s=>{(per[s.kelas]=per[s.kelas]||[]).push(s.nama)});
+ let tot=0,html="";
+ KELAS.forEach(k=>{const b=per[k];if(!b)return;tot+=b.length;html+=`<p><b>${esc(k)}</b> (${b.length}): ${b.map(esc).join(", ")}</p>`});
+ $("belum").textContent=tot;
+ $("belumList").innerHTML=html||"<small>Semua siswa sudah mengerjakan, atau data siswa belum ada di Google Sheets.</small>";
+}
+function nilai(d){return Math.round(d.skor/d.total*100)}
+function bar(el,items,warna){
+ const max=Math.max(1,...items.map(i=>i[1]));
+ $(el).innerHTML=items.map(([n,c])=>`<div class="row"><span class="n">${n}</span><div class="t"><i style="width:${c/max*100}%;background:${warna[n]||'#0f8b8d'}"></i></div><span>${c}</span></div>`).join("");
+}
+function tampil(){
+ const q=$("cari").value.toLowerCase(),fk=$("fKelas").value,fg=$("fGaya").value;
+ const hit=semua.filter(d=>(!q||String(d.nama).toLowerCase().includes(q))&&(!fk||d.kelas===fk)&&(!fg||String(d.gaya).split(" + ").includes(fg)));
+ // ringkasan
+ $("jml").textContent=hit.length;
+ $("rata").textContent=hit.length?Math.round(hit.reduce((a,d)=>a+nilai(d),0)/hit.length):0;
+ $("damp").textContent=hit.filter(d=>d.kesiapan==="Perlu pendampingan").length;
+ const g={Visual:0,Auditori:0,Kinestetik:0};hit.forEach(d=>String(d.gaya).split(" + ").forEach(x=>{if(x in g)g[x]++}));
+ bar("gayaBar",Object.entries(g),{Visual:"#0f8b8d",Auditori:"#f6b73c",Kinestetik:"#d1495b"});
+ const l={Dasar:0,Berkembang:0,Mahir:0};hit.forEach(d=>{if(d.level in l)l[d.level]++});
+ bar("lvlBar",Object.entries(l),{});
+ belumList();
+ // tabel
+ $("isi").innerHTML=hit.map(d=>`<tr><td>${esc(d.nama)}</td><td>${esc(d.kelas)}</td><td><b>${nilai(d)}</b> <small>(${d.skor}/${d.total})</small></td><td>${esc(d.level)}</td><td>${esc(d.kesiapan)}</td><td>${String(d.gaya).split(" + ").map(x=>`<span class="pill ${esc(x)}">${esc(x)}</span>`).join(" ")}</td><td><small>${new Date(d.waktu).toLocaleString("id-ID",{dateStyle:"short",timeStyle:"short"})}</small></td></tr>`).join("");
+ $("kosong").textContent=hit.length?"":"Belum ada data yang cocok.";
+}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function csv(){
+ const h=["Nama","Kelas","Nilai","Skor","Total","Level","Kesiapan","Gaya Belajar","Visual","Auditori","Kinestetik","Waktu"];
+ const r=semua.map(d=>[d.nama,d.kelas,nilai(d),d.skor,d.total,d.level,d.kesiapan,d.gaya,d.v,d.a,d.k,d.waktu]);
+ const t=[h,...r].map(a=>a.map(x=>'"'+String(x).replace(/"/g,'""')+'"').join(",")).join("\n");
+ const b=new Blob(["\ufeff"+t],{type:"text/csv;charset=utf-8"});
+ const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="hasil-asesmen.csv";a.click();
+}
+$("pin").addEventListener("keydown",e=>{if(e.key==="Enter")masuk()});
+</script>
+</body>
+</html>
